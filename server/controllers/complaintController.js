@@ -81,9 +81,13 @@ exports.updateComplaint = async (req, res) => {
         const { status, response } = req.body;
 
         const updatedComplaint = await Complaint.findByIdAndUpdate(
-            req.params.id,
-            { status, response },
-            { new: true }
+        req.params.id,
+        { 
+            status, 
+            response,
+            isViewedByUser: false   // 🔔 Mark as unseen
+        },
+        { new: true }
         );
 
         res.json({
@@ -164,5 +168,45 @@ exports.deleteComplaint = async (req, res) => {
 
     } catch (error) {
         res.status(500).json({ message: "Error deleting complaint." });
+    }
+};
+
+// =========================
+// USER: Get Notification Count
+// =========================
+exports.getNotificationCount = async (req, res) => {
+    try {
+
+        if (req.user.role !== "user") {
+            return res.status(403).json({ message: "Users only." });
+        }
+
+        const count = await Complaint.countDocuments({
+            createdBy: req.user.id,
+            isViewedByUser: false
+        });
+
+        res.json({ count });
+
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching notifications." });
+    }
+};
+
+// =========================
+// USER: Mark Notifications As Viewed
+// =========================
+exports.markNotificationsAsViewed = async (req, res) => {
+    try {
+
+        await Complaint.updateMany(
+            { createdBy: req.user.id, isViewedByUser: false },
+            { isViewedByUser: true }
+        );
+
+        res.json({ message: "Notifications cleared." });
+
+    } catch (error) {
+        res.status(500).json({ message: "Error updating notifications." });
     }
 };

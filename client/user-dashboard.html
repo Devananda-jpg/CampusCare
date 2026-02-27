@@ -110,7 +110,21 @@
 <body>
 
 <div class="sidebar">
-    <h2>User Panel</h2>
+    <h2>
+        User Panel
+        <span id="notifBadge"
+        onclick="openNotifications()"
+        style="
+            background:#dc2626;
+            color:white;
+            border-radius:20px;
+            padding:4px 10px;
+            font-size:12px;
+            display:none;
+            margin-left:8px;
+            cursor:pointer;">
+    </span>
+    </h2>
     <button onclick="showDashboard()">Dashboard</button>
     <button onclick="viewSchedules()">View Schedules</button>
     <button onclick="viewAllComplaints()">All Complaints</button>
@@ -238,6 +252,13 @@ async function submitComplaint() {
 // ================= View My Complaints =================
 async function viewMyComplaints() {
     const token = localStorage.getItem("token");
+        // mark notifications as read
+    await fetch("http://localhost:5000/api/complaints/notifications/mark-read", {
+        method: "PUT",
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    loadNotifications();
 
     const res = await fetch("http://localhost:5000/api/complaints/my", {
         headers: { "Authorization": "Bearer " + token }
@@ -297,6 +318,24 @@ async function voteComplaint(id) {
     alert(data.message);
     viewMyComplaints();
 }
+// ================= Load Notifications =================
+async function loadNotifications() {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("http://localhost:5000/api/complaints/notifications/count", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const data = await res.json();
+    const badge = document.getElementById("notifBadge");
+
+    if (data.count > 0) {
+        badge.innerText = `🔔 ${data.count} Update${data.count > 1 ? "s" : ""}`;
+        badge.style.display = "inline-block";
+    } else {
+        badge.style.display = "none";
+    }
+}
 
 // ================= Logout =================
 function logout() {
@@ -322,6 +361,7 @@ async function deleteComplaint(id) {
 
     viewMyComplaints(); // refresh list
 }
+loadNotifications();
 
 </script>
 

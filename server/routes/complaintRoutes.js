@@ -7,7 +7,9 @@ const {
     getMyComplaints,
     updateComplaint,
     voteComplaint,
-    deleteComplaint
+    deleteComplaint,
+    getNotificationCount,
+    markNotificationsAsViewed
 } = require("../controllers/complaintController");
 
 const { verifyToken } = require("../middleware/authMiddleware");
@@ -29,5 +31,11 @@ router.post("/:id/vote", verifyToken, voteComplaint);
 
 // User deletes resolved complaint
 router.delete("/:id", verifyToken, deleteComplaint);
+
+// User notification count
+router.get("/notifications/count", verifyToken, getNotificationCount);
+
+// User mark notifications as read
+router.put("/notifications/mark-read", verifyToken, markNotificationsAsViewed);
 
 module.exports = router;

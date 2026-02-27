@@ -23,6 +23,11 @@ const complaintSchema = new mongoose.Schema({
         default: ""
     },
 
+    isViewedByUser: {
+    type: Boolean,
+    default: true
+    },
+
     votes: {
         type: Number,
         default: 0
