@@ -6,7 +6,8 @@ const {
     getAllComplaints,
     getMyComplaints,
     updateComplaint,
-    voteComplaint
+    voteComplaint,
+    deleteComplaint
 } = require("../controllers/complaintController");
 
 const { verifyToken } = require("../middleware/authMiddleware");
@@ -25,5 +26,8 @@ router.put("/:id", verifyToken, updateComplaint);
 
 // User votes complaint
 router.post("/:id/vote", verifyToken, voteComplaint);
+
+// User deletes resolved complaint
+router.delete("/:id", verifyToken, deleteComplaint);
 
 module.exports = router;

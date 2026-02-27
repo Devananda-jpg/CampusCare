@@ -130,3 +130,39 @@ exports.voteComplaint = async (req, res) => {
         res.status(500).json({ message: "Error voting complaint" });
     }
 };
+
+// =========================
+// USER: Delete Own Resolved Complaint
+// =========================
+exports.deleteComplaint = async (req, res) => {
+    try {
+        if (req.user.role !== "user") {
+            return res.status(403).json({ message: "Only users can delete complaints." });
+        }
+
+        const complaint = await Complaint.findById(req.params.id);
+
+        if (!complaint) {
+            return res.status(404).json({ message: "Complaint not found." });
+        }
+
+        // Make sure user owns it
+        if (complaint.createdBy.toString() !== req.user.id) {
+            return res.status(403).json({ message: "Not authorized." });
+        }
+
+        // Allow delete only if resolved
+        if (complaint.status !== "Resolved") {
+            return res.status(400).json({
+                message: "You can only delete resolved complaints."
+            });
+        }
+
+        await complaint.deleteOne();
+
+        res.json({ message: "Complaint deleted successfully." });
+
+    } catch (error) {
+        res.status(500).json({ message: "Error deleting complaint." });
+    }
+};
