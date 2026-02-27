@@ -2,40 +2,57 @@
 <html>
 <head>
     <title>Campus Management - Auth</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
     <style>
     body {
-        font-family: Arial;
-        display: flex;
-        height: 100vh;
-        margin: 0;
-        background-color: #f3f4f6;
-    }
+    margin: 0;
+    font-family: 'Poppins', sans-serif;
+    display: flex;
+    height: 100vh;
+    background: linear-gradient(135deg, #eef2ff, #f8fafc);
+}
 
-    .left {
-        flex: 1;
-        background-color: #1e3a8a;
-        color: white;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 28px;
-        font-weight: bold;
-    }
+   .left {
+    flex: 1;
+    background: linear-gradient(135deg, #1e3a8a, #2563eb);
+    color: white;
+    display: flex;
+    align-items: center;
+    padding: 80px;
+    position: relative;
+    overflow: hidden;
+}
 
-    .right {
-        flex: 1;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }
+.left::after {
+    content: "";
+    position: absolute;
+    width: 400px;
+    height: 400px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 50%;
+    top: -100px;
+    right: -100px;
+}
+.right {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
 
     .box {
-        width: 340px;
-        background: white;
-        padding: 30px;
-        border-radius: 8px;
-        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
+    width: 360px;
+    background: white;
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+    transition: 0.3s ease;
+}
+
+.box:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 25px 50px rgba(0,0,0,0.12);
+}
 
     .role-buttons {
         display: flex;
@@ -44,19 +61,21 @@
     }
 
     .role-buttons button {
-        flex: 1;
-        background-color: #64748b;
-        color: white;
-        border: none;
-        padding: 10px;
-        cursor: pointer;
-        border-radius: 4px;
-    }
+    flex: 1;
+    background-color: #e2e8f0;
+    color: #1e293b;
+    border: none;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    font-weight: 500;
+    transition: 0.3s;
+}
 
-    .role-buttons button:hover {
-        background-color: #475569;
-    }
-
+.role-buttons button:hover {
+    background-color: #2563eb;
+    color: white;
+}
     .tabs {
     display: none;
     margin-bottom: 15px;
@@ -110,12 +129,28 @@
 <body>
 
 <div class="left">
-    CampusCare Portal 🚀
-</div>
+    <div class="left-content">
+        <h1>CampusCare Portal</h1>
 
+        <p class="tagline">
+            Bridging communication between students and administration.
+        </p>
+
+        <p class="description">
+            Monitor schedules, raise concerns, prioritize issues through community voting,
+            and track real-time updates — all within one unified platform.
+        </p>
+
+        <p class="highlight">
+            Promoting efficiency, transparency, and continuous campus improvement.
+        </p>
+    </div>
+</div>
 <div class="right">
     <div class="box">
     <!-- Role Selection -->
+     <h3 class="role-title">Hey, who’s here? 👋</h3>
+    <p class="role-subtitle">Select your role to continue</p>
     <div class="role-buttons">
         <button onclick="selectRole('user')">User</button>
         <button onclick="selectRole('admin')">Admin</button>
