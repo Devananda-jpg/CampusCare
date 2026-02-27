@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 220px;
+            background-color: #1e2a78;
+            color: white;
+            padding: 20px;
+        }
+
+        .sidebar h2 {
+            margin-bottom: 30px;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: #2f3fb0;
+            border: none;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .sidebar button:hover {
+            background-color: #4457d6;
+        }
+
+        /* Main Content */
+        .main {
+            flex: 1;
+            padding: 30px;
+            background-color: #f4f6fc;
+        }
+
+        .card {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="sidebar">
+        <h2>Admin Panel</h2>
+        <button onclick="showDashboard()">Dashboard</button>
+        <button onclick="showCreate()">Create Schedule</button>
+        <button onclick="showSchedules()">View Schedules</button>
+        <button onclick="showComplaints()">View Complaints</button>
+        <button onclick="logout()">Logout</button>
+    </div>
+
+    <div class="main">
+        <div id="content" class="card">
+            <h2>Welcome Admin 👩‍💼</h2>
+            <p>Select an option from sidebar.</p>
+        </div>
+    </div>
+
+<script>
+
+function showDashboard() {
+    document.getElementById("content").innerHTML = `
+        <h2>Welcome Admin 👩‍💼</h2>
+        <p>Manage campus cleaning schedules efficiently.</p>
+    `;
+}
+
+function showCreate() {
+    document.getElementById("content").innerHTML = `
+        <h2>Create Schedule</h2>
+        <input type="text" id="taskName" placeholder="Task Name" required>
+        <input type="text" id="area" placeholder="Area (Hostel A etc)" required>
+        <input type="date" id="date" required>
+        <input type="time" id="time" required>
+        <select id="repeatType">
+            <option value="none">No Repeat</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+        </select>
+        <button onclick="createSchedule()">Create</button>
+    `;
+}
+
+async function createSchedule() {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:5000/api/schedules", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+            taskName: document.getElementById("taskName").value,
+            area: document.getElementById("area").value,
+            date: document.getElementById("date").value,
+            time: document.getElementById("time").value,
+            repeatType: document.getElementById("repeatType").value
+        })
+    });
+
+    const data = await response.json();
+    alert(data.message);
+
+    showSchedules(); // auto refresh table after creation
+}
+async function showSchedules() {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch("http://localhost:5000/api/schedules", {
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    const data = await response.json();
+
+    let table = `
+        <h2>All Schedules</h2>
+        <table>
+            <tr>
+                <th>Task</th>
+                <th>Area</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+    `;
+
+    data.schedules.forEach(s => {
+        table += `
+            <tr>
+                <td>${s.taskName}</td>
+                <td>${s.area}</td>
+                <td>${new Date(s.date).toLocaleDateString()}</td>
+                <td>${s.status}</td>
+                <td>
+                    <button onclick='editSchedule(${JSON.stringify(s)})'>Edit</button>
+                    <button onclick="deleteSchedule('${s._id}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+
+    table += "</table>";
+
+    document.getElementById("content").innerHTML = table;
+}
+
+async function deleteSchedule(id) {
+    const token = localStorage.getItem("token");
+
+    if (!confirm("Are you sure you want to delete this schedule?")) return;
+
+    const response = await fetch(`http://localhost:5000/api/schedules/${id}`, {
+        method: "DELETE",
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+    });
+
+    const data = await response.json();
+    alert(data.message);
+    showSchedules();
+}
+
+function editSchedule(schedule) {
+    document.getElementById("content").innerHTML = `
+        <h2>Edit Schedule</h2>
+
+        <input type="text" id="editTaskName" value="${schedule.taskName}">
+        <input type="text" id="editArea" value="${schedule.area}">
+        <input type="date" id="editDate" value="${schedule.date.split("T")[0]}">
+        <input type="time" id="editTime" value="${schedule.time || ''}">
+
+        <select id="editRepeatType">
+            <option value="none" ${schedule.repeatType === "none" ? "selected" : ""}>No Repeat</option>
+            <option value="daily" ${schedule.repeatType === "daily" ? "selected" : ""}>Daily</option>
+            <option value="weekly" ${schedule.repeatType === "weekly" ? "selected" : ""}>Weekly</option>
+        </select>
+
+        <button onclick="updateSchedule('${schedule._id}')">Update</button>
+        <button onclick="showSchedules()">Cancel</button>
+
+        <p id="updateMessage" style="color:green; margin-top:10px;"></p>
+    `;
+}
+
+async function updateSchedule(id) {
+    const token = localStorage.getItem("token");
+
+    const response = await fetch(`http://localhost:5000/api/schedules/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+            taskName: document.getElementById("editTaskName").value,
+            area: document.getElementById("editArea").value,
+            date: document.getElementById("editDate").value,
+            time: document.getElementById("editTime").value,
+            repeatType: document.getElementById("editRepeatType").value
+        })
+    });
+
+    const data = await response.json();
+
+    document.getElementById("updateMessage").innerText = data.message;
+
+    setTimeout(showSchedules, 1000);
+}
+async function showComplaints() {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch("http://localhost:5000/api/complaints", {
+        headers: { "Authorization": "Bearer " + token }
+    });
+
+    const data = await res.json();
+    const complaints = data.complaints;
+
+    let highestVotes = complaints.length > 0 ? complaints[0].votes : 1;
+
+    let content = "<h2>All Complaints</h2>";
+
+    complaints.forEach(c => {
+
+        const ratio = highestVotes > 0
+            ? Math.round((c.votes / highestVotes) * 100)
+            : 0;
+
+        let priority = "Normal";
+        if (c.votes >= 10) priority = "🔥 Critical";
+        else if (c.votes >= 5) priority = "⚠ High";
+
+        content += `
+            <div class="card">
+                <h3>${c.title}</h3>
+                <p><strong>Area:</strong> ${c.area}</p>
+                <p><strong>Posted by:</strong> ${c.createdBy?.name || "User"}</p>
+                <p>${c.description}</p>
+
+                <p><strong>Status:</strong> ${c.status}</p>
+                <p><strong>Votes:</strong> 🔼 ${c.votes}</p>
+                <p><strong>Priority Level:</strong> ${priority}</p>
+                <p><strong>Vote Ratio:</strong> ${ratio}%</p>
+
+                <hr>
+
+                <select id="status-${c._id}">
+                    <option value="Pending">Pending</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Resolved">Resolved</option>
+                </select>
+
+                <input type="text" id="response-${c._id}" placeholder="Admin Response">
+
+                <button onclick="updateComplaint('${c._id}')">
+                    Update
+                </button>
+            </div>
+        `;
+    });
+
+    document.getElementById("content").innerHTML = content;
+}
+
+async function updateComplaint(id) {
+    const token = localStorage.getItem("token");
+
+    const status = document.getElementById(`status-${id}`).value;
+    const responseText = document.getElementById(`response-${id}`).value;
+
+    const res = await fetch(`http://localhost:5000/api/complaints/${id}`, {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + token
+        },
+        body: JSON.stringify({
+            status,
+            response: responseText
+        })
+    });
+
+    const data = await res.json();
+    alert(data.message);
+    showComplaints();
+}
+function logout() {
+    localStorage.removeItem("token");
+    window.location.href = "login.html";
+}
+
+</script>
+
+</body>
+</html>
