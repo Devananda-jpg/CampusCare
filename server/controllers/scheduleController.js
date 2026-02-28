@@ -11,7 +11,22 @@ exports.createSchedule = async (req, res) => {
         const { taskName, area, date, time, repeatType } = req.body;
 
         let nextDate = null;
-        const currentDate = new Date(date);
+        const currentDate = new Date(date + "T00:00:00");
+        // Auto determine status based on date
+        const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    currentDate.setHours(0, 0, 0, 0);
+
+    let status;
+
+if (currentDate.getTime() > today.getTime()) {
+    status = "Scheduled";
+} else if (currentDate.getTime() === today.getTime()) {
+    status = "In Progress";
+} else {
+    status = "Completed";
+}
 
         // Calculate nextDate based on repeatType
         if (repeatType === "daily") {
@@ -27,15 +42,16 @@ exports.createSchedule = async (req, res) => {
             nextDate.setMonth(nextDate.getMonth() + 1);
         }
 
-        const schedule = await Schedule.create({
-            taskName,
-            area,
-            date: currentDate,
-            time,
-            repeatType,
-            nextDate,
-            createdBy: req.user.id
-        });
+  const schedule = await Schedule.create({
+    taskName,
+    area,
+    date: currentDate,
+    time,
+    repeatType,
+    nextDate,
+    status,   // 👈 add this line
+    createdBy: req.user.id
+});;
 
         res.status(201).json({
             message: "Schedule created successfully",
@@ -61,7 +77,6 @@ exports.getAllSchedules = async (req, res) => {
         res.status(500).json({ message: "Server error", error });
     }
 };
-// UPDATE SCHEDULE (Admin Only)
 exports.updateSchedule = async (req, res) => {
     try {
         if (req.user.role !== "admin") {
@@ -69,10 +84,34 @@ exports.updateSchedule = async (req, res) => {
         }
 
         const { id } = req.params;
+        const { taskName, area, date, time, repeatType } = req.body;
+
+        let updatedFields = { taskName, area, time, repeatType };
+
+        if (date) {
+            const currentDate = new Date(date + "T00:00:00");
+            currentDate.setHours(0, 0, 0, 0);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            let status;
+
+            if (currentDate.getTime() > today.getTime()) {
+                status = "Scheduled";
+            } else if (currentDate.getTime() === today.getTime()) {
+                status = "In Progress";
+            } else {
+                status = "Completed";
+            }
+
+            updatedFields.date = currentDate;
+            updatedFields.status = status;
+        }
 
         const updated = await Schedule.findByIdAndUpdate(
             id,
-            req.body,
+            updatedFields,
             { new: true }
         );
 

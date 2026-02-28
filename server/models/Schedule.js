@@ -25,11 +25,11 @@ const scheduleSchema = new mongoose.Schema({
     nextDate: {
         type: Date
     },
-    status: {
-        type: String,
-        enum: ["Scheduled", "Completed"],
-        default: "Scheduled"
-    },
+   status: {
+    type: String,
+    enum: ["Scheduled", "In Progress", "Completed"],
+    default: "Scheduled"
+},
     createdBy: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "User"
